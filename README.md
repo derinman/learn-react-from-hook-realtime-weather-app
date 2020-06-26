@@ -1,68 +1,96 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# 使用 emotion 完成台灣好天氣 UI
 
-## Available Scripts
+## 本單元使用到的網址
 
-In the project directory, you can run:
+- `App.js` 中 Styled Components 的樣式部分：[https://github.com/pjchender/learn-react-from-hook-realtime-weather-app/blob/create-ui/public/create-ui-styled-components.js](https://github.com/pjchender/learn-react-from-hook-realtime-weather-app/blob/create-ui/public/create-ui-styled-components.js)
 
-### `npm start`
+## 補充內容
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 在 React 中載入 SVG 圖示的方法
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+在 React 中載入 SVG 圖示的方法有兩中，書中我們主要使用的是第一種，也就是把 SVG 圖示當成 React 元件的方式來載入；另外也可以把 SVG 當成圖檔直接載入 `<img src="">` 內，以下說明這兩種不同方式的使用：
 
-### `npm test`
+#### 方式一：ReactComponent
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+第一種方式是把 SVG 當成一個 React 元件加以載入，因為變成了 React 元件，所以後續如果有需要改變 SVG 的顏色或做動畫都比較靈活。寫法像這樣：
 
-### `npm run build`
+- STEP 1：將 `./images/cloudy.svg` 匯入，並將該元件命名為 `Cloudy` ，而 `ReactComponent` 是 create-react-app 提供的物件
+- STEP 2：在需要的地方就可以使用 `<Cloudy />`
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```jsx
+// STEP 1：使用 import { ReactComponent as xxx } from xxx 載入 SVG
+import { ReactComponent as DayCloudy } from './images/day-cloudy.svg';
+import { ReactComponent as RainIcon } from './images/rain.svg';
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+const App = () => (
+  <div>
+    {/* STEP 2：直接使用該 Component */}
+    <DayCloudy />
+    <RainIcon />
+  </div>
+);
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### 方式二：直接 import SVG 並搭配 img
 
-### `npm run eject`
+這種方法因為是把 SVG 以圖檔的形式載入，因此後續較難去修改 SVG 圖示的顏色、粗細或製作動畫等效果，但若單純只是要以圖檔呈現，使用這種方式較簡便：
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- STEP 1：將 `./images/cloudy.svg` 匯入，匯入的內容會變成該圖檔的路徑
+- STEP 2：使用 `<img src={...} />` 的方式將 SVG 圖片掛入
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```jsx
+// STEP 1：使用 import xxx from xxx 載入 cloudyIcon，會取得該圖檔路徑
+import dayCloudy from './images/day-cloudy.svg';
+import rainIcon from './images/rain.svg';
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+const App = () => (
+  <div>
+    {/* STEP 2：透過 src 把 SVG 圖片呈現出來 */}
+    <img src={dayCloudy} alt="cloudy icon" />
+    <img src={rainIcon} alt="rain icon" />
+  </div>
+);
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+> ⚠️ 提醒：上述這兩種載入 SVG 圖檔的方式都需要使用 [create-react-app](https://ithelp.ithome.com.tw/articles/[https://create-react-app.dev](https://create-react-app.dev/)) 來建立專案才可以使用，否則需要自行在 WebPack 中建立對應的設定才行。
 
-## Learn More
+### 透過 Emotion 定義許多元件都會共用到的樣式
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+有時多個元件間還是可能有需要被共用的樣式，像是如果每個按鈕都有固定的外觀，只是不同按鈕元件的顏色有不同時，如果重複在每個按鈕元件都撰寫同樣的 CSS 樣式會變得有點多餘，而且若之後需要修改按鈕的外觀，還得要每支檔案一支一支改，但卻又不想定義 class 樣式來套用時，可以怎麼做呢？
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+既然在 Emotion 所寫的 CSS 樣式都是 JavaScript 中的一部分，我們自然可以把撰寫好的 CSS 樣式當作 JavaScript 函式保存起來，步驟如下：
 
-### Code Splitting
+1. 從 `@emotion/core` 中匯入 Emotion 提供的 `css` 函式
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+```jsx
+// STEP 1：匯入 Emotion 提供的 css 函式
+import { css } from '@emotion/core';
+```
 
-### Analyzing the Bundle Size
+2. 定義帶有 CSS 樣式的函式
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+```jsx
+// STEP 2：將一批 CSS 樣式定義成 JavaScript 函式
+const buttonDefault = () => css`
+  background-color: transparent;
+  color: #212121;
+`;
+```
 
-### Making a Progressive Web App
+3. 在 Styled Components 中套用定義好的樣式
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+```jsx
+// STEP 3 在定義 Styled Components 時載入定義好的 CSS 樣式
+// 和 CSS 一樣，同樣的樣式後面寫的會覆蓋前面寫的
+const Button = styled.button`
+  ${buttonDefault}
+  background-color: green;
+`;
+```
 
-### Advanced Configuration
+> 💡 小提醒：要留意一下，`buttonDefault` 是函式，因此可以在 Styled Components 中透過 `${}` 的方式來加以執行，就和取得 props 的方式一樣。
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+## 版權宣吿
 
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+- 台灣好天氣的設計畫面主要參考 imgur 上的圖片 ([https://imgur.com/ZLgiOyj](https://imgur.com/ZLgiOyj))
+- 天氣圖示來自 IconFinder 上 The Weather is Nice Today 所提天（[https://www.iconfinder.com/iconsets/the-weather-is-nice-today](https://www.iconfinder.com/iconsets/the-weather-is-nice-today)）
